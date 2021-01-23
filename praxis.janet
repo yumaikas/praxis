@@ -1,4 +1,6 @@
 (import globals)
+(import err)
+
 (defn field [name type &keys { :default default }]
     (def schema (dyn :praxis/schema))
     (put-in schema [:fields name] @{
@@ -9,9 +11,38 @@
 
 (defn- cast-key [key] 
     (match (type key)
+        :buffer (keyword key)
         :string (keyword key)
         :keyword key
-        _ (error (string "Key of type: " (type key) " cannot be used for schema!"))
+        _ (err/str "Key of type: " (type key) " cannot be used for schema!")
+    )
+)
+
+(comment 
+    What is the list of types I'd want to support out of the box, and how do I want to exend that list?
+    :datetime
+    :timestamp
+    :string
+    :number
+    :integer
+    :boolean
+    
+    # Later
+    (:array :)
+    (:dictionary :)
+)
+
+(defn- try-convert-value [value target-type] 
+    (match [(type value) target-type] 
+        [:string :string] value
+        [:string :number] (scan-number value)
+        [:string :integer] (int/s64 value)
+        [:string :boolean] (match value 
+            "true" true 
+            "false" false 
+            _ (err/str "Cannot convert " value " to boolean!"))
+        [:string :timestamp] (scan-number value)
+        _ (err/str "A conversion from " (type value) " to " target-type " is not known by Praxis.")
     )
 )
 
