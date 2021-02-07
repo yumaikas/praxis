@@ -1,6 +1,5 @@
 (use ../praxis)
 (use testament)
-(import ../render :as r)
 (import joy/html :as html)
 (import golden-master :as gold)
 
