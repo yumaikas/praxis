@@ -7,11 +7,11 @@
         "https://github.com/yumaikas/janet-stringx"
         # Relying on my fork for now, until pyrmont and I figure out
         # how best to define a suite
-        "https://github.com/yumaikas/testament.git"
-        "https://github.com/joy-framework/joy.git"
+        "https://github.com/pyrmont/testament"
+        "https://github.com/swlkr/janet-html"
     ])
     
 (declare-source 
-    :source @["praxis.janet" "src/render.janet" "src/schema.janet"])
+    :source @["src/praxis.janet" "src/praxis"])
     
     

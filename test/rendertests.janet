@@ -1,6 +1,6 @@
-(use ../praxis)
+(use ../src/praxis)
 (use testament)
-(import joy/html :as html)
+(import janet-html :as html)
 (import golden-master :as gold)
 
 (s/defschema Point
@@ -17,8 +17,7 @@
     (not (string/find "<function 0x" html))
     (not (string/find "<array 0x" html))))
 
-
-(defsuite!
+(exercise! []
 
   (deftest render-is-clean-and-not-regressive
     (def p (s/cast :to Point :from {"x" "1" "y" "2"} :fields [:x :y]))
@@ -55,7 +54,7 @@
 
 (defn- not-dict-empty? [dict] (not (dict-empty? dict)))
 
-(defsuite!
+(exercise! []
   # Test is currently failing, this is on purpose
   (deftest msg-no-err
     (def msg (new-message 
@@ -77,7 +76,7 @@
   (s/field :allow-downloads-after :timestamp :title "The UTC timestamp for when the download is avaialble"))
 
 (setdyn :pretty-format "%n")
-(defsuite! 
+(exercise! [] 
   (def gf (as-> (s/cast
                   :to GameFile
                   :from { "name" "Raiders of Bythnia"
@@ -108,7 +107,7 @@
     (assert-expr (ensure-clean-encoding output) "Output isn't clean!")
     (assert-equal true (gold/compare :text "GameFileRender" "GameFileRender.html" output)) ))
 
-(defsuite!
+(exercise! []
   (def gf (s/empty-of GameFile))
   (deftest can-render-empty-obj-with-schema 
     # (pp (r/form-fields gf))

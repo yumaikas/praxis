@@ -1,4 +1,4 @@
-(use ../praxis)
+(use ../src/praxis)
 (use testament)
 
 (s/defschema Contact
@@ -28,7 +28,7 @@
         (s/validate-required it :id "Cannot save contact without id!")
         (s/validate-peg it :phone-number phone-number-patt "Please enter a 10-digit phone number")))
 
-(defsuite! 
+(exercise! []
   (deftest cast-works
     (assert-matches
       @{ 
@@ -46,6 +46,5 @@
       (new-contact { 
                     "name" "Andrew Owen" 
                     "phone-number" "555-555-5555" 
-                    "term-of-address" "Andrew"
-                    }))))
+                    "term-of-address" "Andrew"}))))
 
