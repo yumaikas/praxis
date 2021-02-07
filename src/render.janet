@@ -1,4 +1,4 @@
-(import ./praxis)
+(import ./schema)
 (import datex :as dt)
 (import err)
 
@@ -69,7 +69,7 @@
 
 
 (defn form-fields [obj] 
-  (unless (praxis/has-schema? obj)
+  (unless (schema/has-schema? obj)
     (err/str "Cannot render an object that wasn't built with a praxis schema"))
   (defn get-type [fkey] 
     (get-in obj [:schema :fields fkey :type]))

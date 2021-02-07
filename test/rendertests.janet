@@ -3,9 +3,9 @@
 (import joy/html :as html)
 (import golden-master :as gold)
 
-(defschema Point
-  (field :x :number)
-  (field :y :number))
+(s/defschema Point
+  (s/field :x :number)
+  (s/field :y :number))
 
 (gold/set-dir "test" "recording")
 
@@ -21,33 +21,33 @@
 (defsuite!
 
   (deftest render-is-clean-and-not-regressive
-    (def p (cast :to Point :from {"x" "1" "y" "2"} :fields [:x :y]))
+    (def p (s/cast :to Point :from {"x" "1" "y" "2"} :fields [:x :y]))
     (def output (html/encode (r/form-fields p)))
     (assert-expr (ensure-clean-encoding output) "Output contained a non-understood Janet type!")
     (gold/compare :text "PointRender" "CleanPoint.html" output))
 
   (deftest render-shows-error
     (def y-missing-err "Cannot define a point without a y coordinate")
-    (def p (as-> (cast 
+    (def p (as-> (s/cast 
                    :to Point :from {"x" "1" "y" nil} 
                    :fields [:x :y]) it
-                 (validate-required it :y y-missing-err)))
+                 (s/validate-required it :y y-missing-err)))
     (assert-matches  {:errs {:y y-missing-err }} p)
     (def output (html/encode (r/form-fields p)))
     (assert-expr (string/find y-missing-err output) "Output should contain Y missing error!")
     (assert-expr (ensure-clean-encoding output) "Output contained a non-understood Janet type!")
     (gold/compare :text "ErrorPoint" "ErrorPoint.html" output)))
 
-(defschema Message
-  (field :id :integer)
-  (field :from :string)
-  (field :to :string)
-  (field :body :text)
-  (field :updated :timestamp))
+(s/defschema Message
+  (s/field :id :integer)
+  (s/field :from :string)
+  (s/field :to :string)
+  (s/field :body :text)
+  (s/field :updated :timestamp))
     
 (defn new-message [&keys kwargs]
-  (as-> (cast :to Message :from kwargs  :fields [:id :from :to :body :updated]) it
-        (reduce |(do (validate-required $0 $1) $0) it [:to :from :body :updated])))
+  (as-> (s/cast :to Message :from kwargs  :fields [:id :from :to :body :updated]) it
+        (reduce |(do (s/validate-required $0 $1) $0) it [:to :from :body :updated])))
 
 (defn- dict-empty? [dict] 
   (and (dictionary? dict)
@@ -66,20 +66,19 @@
     (assert-matches {:errs (e (not-dict-empty? e))} msg)))
 
 
-
-(defschema GameFile
+(s/defschema GameFile
   # An entirely fictional and likely impractical schema, acts as a catch-all for 
-  (field :name :string :title "Name")
-  (field :desc :text :title "Decription")
-  (field :rating :number :title "Rating")
-  (field :promotion-start-date :date :title "The date the download promo starts")
-  (field :is-featured :bool :title "Will this download be featured on our front page?")
-  (field :allowed-downloads :integer :title "Number allowed downloads per user")
-  (field :allow-downloads-after :timestamp :title "The UTC timestamp for when the download is avaialble"))
+  (s/field :name :string :title "Name")
+  (s/field :desc :text :title "Decription")
+  (s/field :rating :number :title "Rating")
+  (s/field :promotion-start-date :date :title "The date the download promo starts")
+  (s/field :is-featured :bool :title "Will this download be featured on our front page?")
+  (s/field :allowed-downloads :integer :title "Number allowed downloads per user")
+  (s/field :allow-downloads-after :timestamp :title "The UTC timestamp for when the download is avaialble"))
 
 (setdyn :pretty-format "%n")
 (defsuite! 
-  (def gf (as-> (cast
+  (def gf (as-> (s/cast
                   :to GameFile
                   :from { "name" "Raiders of Bythnia"
                          "desc" "A small top-down adventure where you save Bythnia from the Slimes!"
@@ -110,7 +109,7 @@
     (assert-equal true (gold/compare :text "GameFileRender" "GameFileRender.html" output)) ))
 
 (defsuite!
-  (def gf (empty-of GameFile))
+  (def gf (s/empty-of GameFile))
   (deftest can-render-empty-obj-with-schema 
     # (pp (r/form-fields gf))
     (def output (html/encode (r/form-fields gf)))

@@ -12,6 +12,6 @@
     ])
     
 (declare-source 
-    :source @["praxis.janet" "src/render.janet" "src/praxis.janet"])
+    :source @["praxis.janet" "src/render.janet" "src/schema.janet"])
     
     
