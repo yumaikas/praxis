@@ -1,4 +1,5 @@
 (import err)
+(import stringx :as "str")
 (import datex :as "dt")
 
 (comment ```
@@ -49,42 +50,48 @@
     (:array :)
     (:dictionary :) ```)
 
+(defn- convert-error-msg [strval type-target] 
+  [:err (string "\""strval"\" isn't a valid "type-target)])
+
 (defn- convert-number 
   [strval] 
   (def ret (scan-number strval))
-  (if ret [:ok ret] [:err "Could not convert %FNAME to number."]))
+  (if ret [:ok ret] (convert-error-msg strval "number")))
 
 (defn- convert-timestamp 
   [strval]
   (def ret (scan-number strval))
-  (if ret [:ok ret] [:err "Could not convert %FNAME to timestamp."]))
+  (if ret [:ok ret] (convert-error-msg strval "timestamp")))
 
 (defn- convert-s64
   [strval] 
   (match (protect (int/s64 strval))
     [:ok val] [:ok val]
-    [:err _] [:err "Could not convert %FNAME to a signed 64 bit integer"]))
+    [:err _] (convert-error-msg strval "non-fractional number")))
 
 (defn- convert-date 
   [strval] 
   (match (dt/parse-ymdstr strval) 
-    nil [:err "Could not convert %FNAME to a date"]
+    nil (convert-error-msg strval "date")
     val [:ok val]))
 
 (defn- convert-bool
-  [strval]
+  [name strval]
   (match strval
+    name [:ok true]
     "true" [:ok true]
     "false" [:ok false]
-    _ [:err "Cannot convert %FNAME to boolean!"]))
+    nil [:ok false]
+    _ (convert-error-msg strval "boolean")))
 
-(defn- try-convert-value [value target-type] 
+(defn- try-convert-value [name value target-type] 
     (match [(type value) target-type] 
+        [same/type same/type] [:ok value]
         [:string :text]   [:ok value]
         [:string :string] [:ok value]
         [:string :number] (convert-number value)
         [:string :integer] (convert-s64 value)
-        [:string :boolean] (convert-bool value)
+        [:string :bool] (convert-bool name value)
         [:string :date] (convert-date value)
         [:string :timestamp] (convert-timestamp value)
         _ (err/str "A conversion from " (type value) " to " target-type " is not known by Praxis.")))
@@ -140,22 +147,54 @@
         (err/str "Key of type: " (type key) " cannot cast to schema key"))
     [(keyword key) value])
 
+
+(comment ```
+(defn has-schema? [obj] 
+  (match 
+    obj {
+         :field-order (fo (indexed? fo))
+         :errs (e (dictionary? e))
+         :vals (v (dictionary? v))
+         :schema {
+                  :name (n (symbol? n))
+                  :fields (f (dictionary? f))
+                  :type :praxis/schema }} 
+    true
+    _ false))
+    ```)
+
+(defn schema? [maybe-schema] 
+  (match maybe-schema 
+    { :name (n (symbol? n))
+     :fields (f (dictionary? f))
+     :type :praxis/schema
+     :field-order (a (indexed? a))}
+    true
+    _ false))
+
+(defn empty-of [schema] {
+                          :field-order (schema :field-order)
+                          :errs @{}
+                          :vals @{}
+                          :schema schema
+                          })
+
 (defn cast [&keys {:to schema :from kvargs :fields allowed-fields}]
     (assert (indexed? allowed-fields) "Allowed fields should be array|tuple!")
     (assert (dictionary? kvargs) "Casting should be from a struct|table")
 
     (def field-names (seq 
                          [fname :in (schema :field-order)
-                           :when (find |(= fname $) allowed-fields)
-                           ]
+                           :when (find |(= fname $) allowed-fields) ]
                        (keyword fname)))
 
     (assert (= (length field-names) (length allowed-fields)))
     
     (def errs @{})
+    (def schema-name (get schema :name))
 
     (defn add-err [k msg] 
-      (tracev [k msg])
+      # (def msg (str/replace-pairs ["%FNAME" k "%SCHEMA" schema-name] msg))
       (match (errs k)
         nil (put errs k @[msg])
         (x (indexed? x)) (array/concat x msg)
@@ -175,7 +214,7 @@
     (loop [(k v) :in (map cast-kv (pairs kvargs))
            :when (find |(= k $) field-names)
            :before (def field-spec (get-in schema [:fields k]))]
-      (match (try-convert-value v (field-spec :type)) 
+      (match (try-convert-value (field-spec :name) v (field-spec :type)) 
         # We need the unconverted value in case of 
         [:err msg] (do (add-val k v) (add-err k msg))
         [:ok val] (add-val k val)))
@@ -187,15 +226,9 @@
          :field-order (fo (indexed? fo))
          :errs (e (dictionary? e))
          :vals (v (dictionary? v))
-         :schema {
-                  :name (n (symbol? n))
-                  :fields (f (dictionary? f))
-                  :type :praxis/schema
-                  }
-         } 
+         :schema (s (schema? s))}
     true
-    _ false)
-  )
+    _ false))
 
 (defmacro defschema [name & body]
     (with-syms [$name] 

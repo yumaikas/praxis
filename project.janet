@@ -4,6 +4,7 @@
     :dependencies [
         "https://github.com/yumaikas/janet-errs"
         "https://github.com/yumaikas/janet-datex"
+        "https://github.com/yumaikas/janet-stringx"
         # Relying on my fork for now, until pyrmont and I figure out
         # how best to define a suite
         "https://github.com/yumaikas/testament.git"
@@ -11,6 +12,6 @@
     ])
     
 (declare-source 
-    :source @["praxis.janet"])
+    :source @["praxis.janet" "render.janet"])
     
     
