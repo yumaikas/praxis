@@ -1,12 +1,16 @@
 (declare-project 
     :name "praxis"
-    :description "A library designed to help you declare, validate, and render objects that follow a schema. Inspired by ecto"
+    :description ```
+    A library designed to help you declare, validate, and render objects that follow a schema. 
+    Inspired by ecto, but has an emphasis on building helping render data as well as validate it.
+
+    Still very much in alpha, until it's properly used in a site or 3
+    ```
     :dependencies [
         "https://github.com/yumaikas/janet-errs"
         "https://github.com/yumaikas/janet-datex"
         "https://github.com/yumaikas/janet-stringx"
-        # Relying on my fork for now, until pyrmont and I figure out
-        # how best to define a suite
+        "https://github.com/yumaikas/janet-assertx"
         "https://github.com/pyrmont/testament"
         "https://github.com/swlkr/janet-html"
     ])
