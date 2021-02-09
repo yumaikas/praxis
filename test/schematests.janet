@@ -22,13 +22,15 @@
         (s/validate-required it :term-of-address)
         (s/validate-peg it :phone-number phone-number-patt "Please enter a 10-digit phone number")))
 
-(defn updateable-contact [kvargs]
-  (as-> (s/cast :to Contact :from kvargs :fields [:id :name :term-of-addres :phone-number]) it
+(defn contact-for-update [kvargs]
+  (as-> (s/cast :to Contact :from kvargs :fields [:id :name :term-of-address :phone-number]) it
         (s/validate-required it :name "Name is required for contact")
         (s/validate-required it :id "Cannot save contact without id!")
         (s/validate-peg it :phone-number phone-number-patt "Please enter a 10-digit phone number")))
 
-(exercise! []
+
+(exercise! 
+  []
   (deftest cast-works
     (assert-matches
       @{ 
@@ -37,14 +39,22 @@
         :errs @{}
         :field-order [:name :term-of-address :phone-number] }
       (s/cast :to Contact 
-            :from { "name" "Andrew Owen" "phone-number" "555-555-5555" } 
-            :fields [:term-of-address :name :phone-number])))
+              :from { "name" "Andrew Owen" "phone-number" "555-555-5555" } 
+              :fields [:term-of-address :name :phone-number])))
 
   (deftest new-contact
     (assert-matches 
       {:errs (e (and (dictionary? e) (= (length (pairs e)) 0))) } 
-      (new-contact { 
-                    "name" "Andrew Owen" 
+      (new-contact { "name" "Andrew Owen" 
                     "phone-number" "555-555-5555" 
-                    "term-of-address" "Andrew"}))))
+                    "term-of-address" "Andrew" })))
+
+  (deftest contact-failing-validation-has-errors
+    (def contact 
+      (contact-for-update { "name" "Andrew Owen" 
+                           "phone-number" "555-555-5555" 
+                           "term-of-address" "Andrew"}))
+    (assert-expr 
+      (s/has-errors? contact) 
+      "Updatable contact should check for presence of id!")))
 

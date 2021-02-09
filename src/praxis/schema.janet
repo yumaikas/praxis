@@ -182,7 +182,7 @@
                            :when (find |(= fname $) allowed-fields) ]
                        (keyword fname)))
 
-    (assert (= (length field-names) (length allowed-fields)))
+    (assert (= (length field-names) (length allowed-fields)) "There was a mismatch between the requested fields and the fields on the schema. This likely means a type on :fields argument")
     
     (def errs @{})
     (def schema-name (get schema :name))
@@ -213,6 +213,9 @@
         [:err msg] (do (add-val k v) (add-err k msg))
         [:ok val] (add-val k val)))
     obj)
+
+(defn has-errors? [obj] 
+  (> (length (keys (get obj :errs))) 0))
 
 (defn has-schema? [obj] 
   (match 
