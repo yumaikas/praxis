@@ -99,7 +99,7 @@
 
 (defn validate-fn [obj field-key f message]
   (when (get-in obj [:errs field-key]) 
-    (break))
+    (break obj))
   (unless (f (get-in obj [:vals field-key]))
     (put-in obj [:errs field-key] message))
   obj)
@@ -109,14 +109,14 @@
   (default message 
     (string (field-desc obj field-key) " is a required field. "))
   (when ((obj :errs) field-key)
-    (break))
+    (break obj))
   (unless ((obj :vals) field-key)
     (put-in obj [:errs field-key] message))
   obj)
 
 (defn validate-range [obj fkey [low high] &opt message]
   (when ((obj :errs) fkey) 
-    (break))
+    (break obj))
   (def field ((obj :vals) fkey))
   (default message 
     (string (field-desc obj fkey) " should be between " low " and " high))
@@ -127,7 +127,7 @@
 (defn validate-peg [obj fkey patt message]
   (assert (obj :schema) "Object must have a schema")
   (when ((obj :errs) fkey)
-    (break))
+    (break obj))
   (def val (get-in obj [:vals fkey]))
   (unless (and val (bytes? val))
     (err/str "Invalid field " fkey))

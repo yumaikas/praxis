@@ -24,8 +24,16 @@
 
 (defn contact-for-update [kvargs]
   (as-> (s/cast :to Contact :from kvargs :fields [:id :name :term-of-address :phone-number]) it
+        # Validations are doubled here because a failed validation shouldn't 
+        # break the chain, like they used to.
+        # If it does, we have problems.
+        (s/validate-required it :name "Name is required for contact")
         (s/validate-required it :name "Name is required for contact")
         (s/validate-required it :id "Cannot save contact without id!")
+        (s/validate-required it :id "Cannot save contact without id!")
+        (s/validate-fn it :id number? "Id must be a number!")
+        (s/validate-fn it :id number? "Id must be a number!")
+        (s/validate-peg it :phone-number phone-number-patt "Please enter a 10-digit phone number")
         (s/validate-peg it :phone-number phone-number-patt "Please enter a 10-digit phone number")))
 
 
@@ -57,4 +65,5 @@
     (assert-expr 
       (s/has-errors? contact) 
       "Updatable contact should check for presence of id!")))
+
 
