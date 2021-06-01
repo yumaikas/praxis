@@ -83,6 +83,7 @@
 (defn- try-convert-value [name value target-type] 
     (match [(type value) target-type] 
         [same/type same/type] [:ok value]
+        [:number :integer] [:ok value]
         [:string :text]   [:ok value]
         [:string :string] [:ok value]
         [:string :number] (convert-number value)
@@ -140,22 +141,6 @@
     (unless (bytes? key)
         (err/str "Key of type: " (type key) " cannot cast to schema key"))
     [(keyword key) value])
-
-
-(comment ```
-(defn has-schema? [obj] 
-  (match 
-    obj {
-         :field-order (fo (indexed? fo))
-         :errs (e (dictionary? e))
-         :vals (v (dictionary? v))
-         :schema {
-                  :name (n (symbol? n))
-                  :fields (f (dictionary? f))
-                  :type :praxis/schema }} 
-    true
-    _ false))
-    ```)
 
 (defn schema? [maybe-schema] 
   (match maybe-schema 
