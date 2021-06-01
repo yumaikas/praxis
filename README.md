@@ -22,10 +22,6 @@ Praxis is in v0.3. It has a decent amount of tests, . I welcome other people loo
 (db/tx "contacts.db"
     (db/init [Contact]))
 
-
-    
-
-
 (defn- phone-len-match [& args] 
   (def digits (string ;args))
   (if (= 10 (length digits)) digits nil))
