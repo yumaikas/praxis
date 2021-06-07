@@ -34,6 +34,7 @@
       :default (kwargs :default)
       :title (kwargs :title)
       :hidden (kwargs :hidden)
+      :flags (kwargs :flags)
       })
   (put-in (get-schema name) [:fields name] field-spec)
   (array/concat (get (get-schema name) :field-order) name))
@@ -151,12 +152,12 @@
     true
     _ false))
 
-(defn empty-of [schema] {
-                          :field-order (schema :field-order)
-                          :errs @{}
-                          :vals @{}
-                          :schema schema
-                          })
+(defn empty-of 
+  [schema] 
+  {:field-order (schema :field-order)
+   :errs @{}
+   :vals @{}
+   :schema schema })
 
 (defn cast [&keys {:to schema :from kvargs :fields allowed-fields}]
     (assert (indexed? allowed-fields) "Allowed fields should be array|tuple!")
@@ -164,7 +165,7 @@
 
     (def field-names (seq 
                          [fname :in (schema :field-order)
-                           :when (find |(= fname $) allowed-fields) ]
+                          :when (find |(= fname $) allowed-fields)]
                        (keyword fname)))
 
     (assert (= (length field-names) (length allowed-fields)) "There was a mismatch between the requested fields and the fields on the schema. This likely means a type on :fields argument")
@@ -213,9 +214,9 @@
     _ false))
 
 (defmacro defschema [name & body]
-    (with-syms [$name] 
-        ~(upscope 
-            (def $name @{ :name (symbol ',name) :fields @{} :field-order @[] :type :praxis/schema })
-            (with-dyns [:praxis/schema $name] 
-                ,(splice body))
-            (def ,name $name)))) 
+  (with-syms [$name] 
+    ~(upscope 
+       (def $name @{ :name (symbol ',name) :fields @{} :field-order @[] :type :praxis/schema })
+       (with-dyns [:praxis/schema $name] 
+         ,(splice body))
+       (def ,name $name)))) 

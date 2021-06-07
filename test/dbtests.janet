@@ -6,7 +6,7 @@
 (s/defschema
   Player
   (s/field :rowid :integer)
-  (s/field :name :string)
+  (s/field :name :string :flags [:unique])
   (s/field :avatar-url :string))
 
 (s/defschema 
@@ -66,7 +66,13 @@
       (db/tx file
              (db/fetch Player (ids 0))))
     (assert-equal "Amanda" (get-in p1db-after [:vals :name]))
-    (assert-equal "https://example.com/amanda/avatar" (get-in p1db-after [:vals :avatar-url]))
-  ))
+    (assert-equal "https://example.com/amanda/avatar" (get-in p1db-after [:vals :avatar-url])))
 
+  (deftest can-delete
+    (def ids (db/tx file (db/eval "SELECT rowid from Player" )))
+    (db/tx file
+      (each {:rowid id} ids
+        (db/delete Player id)))
+
+    (assert-equal 0 (length (db/tx file (db/eval "SELECT rowid from Player"))))))
 
