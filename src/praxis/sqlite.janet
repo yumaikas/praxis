@@ -1,5 +1,6 @@
 (import ./schema :as s)
 (import sqlite3 :as sql)
+(import err)
 (defn- s. [& args] (string ;args))
 
 
@@ -17,6 +18,26 @@
          ([err fib] (do 
                       (,sql/eval (dyn :praxis/db) "ROLLBACK TRANSACTION")
                       (propagate err fib)))))))
+
+(defmacro migrate [file & body] 
+  ~(with-dyns 
+     [:praxis/db (or (dyn :praxis/db) (,sql/open ,file))
+      :praxis/migrating true]
+     (defer (,sql/close (dyn :praxis/db))
+       (try
+         (do 
+           (,sql/eval (dyn :praxis/db) "PRAGMA journal_mode=WAL")
+           (,sql/eval (dyn :praxis/db) "BEGIN TRANSACTION")
+           (def retval (do ,;body))
+           (,sql/eval (dyn :praxis/db) "COMMIT TRANSACTION")
+           retval)
+         ([err fib] (do 
+                      (,sql/eval (dyn :praxis/db) "ROLLBACK TRANSACTION")
+                      (propagate err fib)))))))
+
+(defn sqlite-table-fragment [text] 
+  (def schema (or (dyn :praxis/schema) (error "sqlite-table-fragment can only be called inside defschema")))
+  (put schema :db/sqlite-fragment text))
 
 (defn- fields-from-schema [schema] 
   (def order (schema :field-order))
@@ -51,6 +72,7 @@
     (s.
       "CREATE TABLE IF NOT EXISTS " (clean-name (t :name)) " (\r\n"
       (string/join (map |(s. "\t" ($ :name) " " ($ :type)) (t :columns )) ",\r\n")
+      "\t" (t :db/sqlite-fragment) "\r\n"
       ");")))
   (each stmt statements 
     (sql/eval (dyn :praxis/db) stmt)))
@@ -154,9 +176,14 @@
   (sql/eval (dyn :praxis/db) query {:rowid id})
   nil)
 
-
 (defn eval [query &opt params]
   (sql/eval (dyn :praxis/db) query (or params {})))
 
+(defn- ensure-migrating [fn-name] 
+  (unless (dyn :praxis/migrating)
+    (err/str "Cannot " fn-name " unless it is part of a migration!")))
 
-
+(defn drop-tables [& tables]
+  (ensure-migrating "drop-tables")
+  (each t tables
+     (sql/eval (dyn :praxis/db) (s. `DROP TABLE ` (t :name)))))

@@ -11,6 +11,13 @@
 (defn- get-schema [name] 
   (or (dyn :praxis/schema) (err/str name " field can only be called inside defschema")))
 
+(defn- kv-without [kv & _keys] 
+  (def ret @{})
+  (each [k v] (pairs kv)
+    (unless (index-of k _keys)
+      (put ret k v)))
+  (table/to-struct ret))
+
 (defn field 
   ```
   Expects a name and a type. The rest of the args are as follows:
@@ -35,6 +42,7 @@
       :title (kwargs :title)
       :hidden (kwargs :hidden)
       :flags (kwargs :flags)
+      :meta (kv-without kwargs :default :title :hidden :flags)
       })
   (put-in (get-schema name) [:fields name] field-spec)
   (array/concat (get (get-schema name) :field-order) name))
