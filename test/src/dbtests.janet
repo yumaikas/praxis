@@ -1,5 +1,5 @@
-(import ../src/praxis/sqlite :as db)
-(import ../src/praxis/schema :as s)
+(import ../../src/praxis/sqlite :as db)
+(import ../../src/praxis/schema :as s)
 
 (use testament)
 (defn s. [& args] (string ;args))

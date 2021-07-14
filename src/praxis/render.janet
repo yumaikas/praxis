@@ -6,7 +6,7 @@
 (def render-form-fieldtypes @{})
 
 (defmacro add-form-fieldtype [my/type & body] 
-  ~(put render-form-fieldtypes ,my/type (fn [title name value my/err] 
+  ~(put render-form-fieldtypes ,my/type (fn [title name value my/err field] 
                                           (def name (keyword name))
                                           ,;body)))
 
@@ -55,6 +55,19 @@
     (when my/err [:div {:class "form-error" } my/err])]])
 
 (add-form-fieldtype
+  :picklist
+  (def vals (get-in field [:meta :values]))
+  [:div
+   [:label {:for name}
+    [:div (string title ":")]
+    [:select {:name name} 
+     (seq [v :in vals
+           :when (v :active)]
+       [:option {:value (v :value) 
+                 :selected (when (= (v :value) value) true) }  
+        (v :title)]) ]]])
+
+(add-form-fieldtype
   :date
   (defn to-ymdstr [value]
     (as?-> value it
@@ -74,15 +87,14 @@
     [:input { :name name :type "datetime-local" :value value }]
     (when my/err [:div {:class "form-error" } my/err])]])
 
-(defn hidden-field [fkey value] 
-
-  )
+(defn hidden-field [fkey value] )
 
 (defn form-fields [obj] 
   (unless (schema/has-schema? obj)
     (err/str "Cannot render an object that wasn't built with a praxis schema"))
   (defn get-type [fkey] 
     (get-in obj [:schema :fields fkey :type]))
+
   (defn get-title [fkey] (get-in obj [:schema :fields fkey :title] fkey))
   (defn is-hidden? [fkey] (get-in obj [:schema :fields fkey :hidden]))
   (defn get-err [fkey] (get-in obj [:errs fkey]))
@@ -97,7 +109,8 @@
       (def render/fn (render-form-fieldtypes ftype))
       (unless render/fn 
         (err/str "Cannot render type " ftype "!"))
-      (render/fn title fkey value my/err)))
+
+      (render/fn title fkey value my/err (get-in obj [:schema :fields fkey]))))
         
 #@task[Add test for hidden fields. And/or give hidden fields more values
 # I'm thinking "embed" "hide" and something else? Or a way to easily overload that on a per-form basis? Something to noodle on later]

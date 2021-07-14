@@ -1,4 +1,4 @@
-(use ../src/praxis)
+(use ../../src/praxis)
 (use testament)
 
 (s/defschema Contact

@@ -89,7 +89,15 @@
     nil [:ok false]
     _ (convert-error-msg strval "boolean")))
 
-(defn- try-convert-value [name value target-type] 
+(defn- convert-picklist 
+  [val meta]
+  (if-let [picklist (meta :values)
+           vals (map |($ :value) picklist)
+           _ (index-of val vals)]
+    [:ok val]
+    [:err (string val " isn't one of " ;(map |($ :value) picklist))]))
+
+(defn- try-convert-value [name value target-type &opt meta] 
     (match [(type value) target-type] 
         [same/type same/type] [:ok value]
         [:number :integer] [:ok value]
@@ -100,6 +108,7 @@
         [:string :bool] (convert-bool name value)
         [:string :date] (convert-date value)
         [:string :timestamp] (convert-timestamp value)
+        [:string :picklist] (convert-picklist value meta)
         _ (err/str "A conversion from " (type value) " to " target-type " is not known by Praxis.")))
 
 (defn- field-desc [obj field-key] 
@@ -202,7 +211,7 @@
     (loop [(k v) :in (map cast-kv (pairs kvargs))
            :when (find |(= k $) field-names)
            :before (def field-spec (get-in schema [:fields k]))]
-      (match (try-convert-value (field-spec :name) v (field-spec :type)) 
+      (match (try-convert-value (field-spec :name) v (field-spec :type) (get-in field-spec [:meta])) 
         # We need the unconverted value in case of 
         [:err msg] (do (add-val k v) (add-err k msg))
         [:ok val] (add-val k val)))

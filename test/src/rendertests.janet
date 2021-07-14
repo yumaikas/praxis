@@ -1,4 +1,4 @@
-(use ../src/praxis)
+(use ../../src/praxis)
 (use testament)
 (import janet-html :as html)
 (import golden-master :as gold)
@@ -38,7 +38,14 @@
              # An entirely fictional and likely impractical schema, acts as a catch-all for 
              (s/field :name :string :title "Name")
              (s/field :desc :text :title "Decription")
-             (s/field :rating :number :title "Rating")
+             (s/field :rating :picklist :title "Rating"
+                      :values [
+                               {:value "1" :title "*" :active true}
+                              {:value "2" :title "**" :active true}
+                              {:value "3" :title "***" :active true}
+                              {:value "4" :title "****" :active true}
+                              {:value "5" :title "*****" :active true} ]
+                      )
              (s/field :promotion-start-date :date 
                       :title "The date the download promo starts")
              (s/field :is-featured :bool 
@@ -107,7 +114,7 @@
                   :to GameFile
                   :from { "name" "Raiders of Bythnia"
                          "desc" "A small top-down adventure where you save Bythnia from the Slimes!"
-                         "rating" "3.7"
+                         "rating" "3"
                          "promotion-start-date" "2021-3-1"
                          "is-featured" "false"
                          "allowed-downloads" "40"
@@ -126,7 +133,11 @@
                 it
                 ))
   (deftest no-errors 
-    (assert-matches { :errs (e (dict-empty? e)) } gf)
+    (def xpr (match gf 
+      {:errs (e (dict-empty? e)) } true
+      {:errs fails } (do (pp fails) false)
+      _ false))
+    (assert-expr xpr)
     # (gold/compare :text "PointRender" "ErrorPoint.html" output)
     (def hic (r/form-fields gf))
     (def output (html/encode hic))

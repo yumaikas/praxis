@@ -3,6 +3,14 @@
 (import err)
 (defn- s. [& args] (string ;args))
 
+(def _sql/eval sql/eval)
+
+(defn sql/eval [conn query &opt params] 
+  (when (dyn :praxis/sqltrace)
+    (printf "SQL-EVAL %j %j" query params))
+  (if params
+    (_sql/eval conn query params)
+    (_sql/eval conn query)))
 
 (defmacro tx [file & body] 
   ~(with-dyns 
@@ -44,7 +52,7 @@
   (seq [f :in order] 
     (get-in schema [:fields f])))
 
-(defn- clean-name [name] (string/replace "-" "_" name))
+(defn- clean-name [name] (string/replace-all "-" "_" name))
 
 (defn init [schemata] 
   # Iteratate over the schemas involved
