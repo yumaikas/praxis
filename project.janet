@@ -1,5 +1,8 @@
 (declare-project 
     :name "praxis"
+    :author "Andrew Owen"
+    :url "https://github.com/yumaikas/praxis"
+    :license "MIT"
     :description ```
     A library designed to help you declare, validate, and render objects that follow a schema. 
     Inspired by ecto, but has an emphasis on building helping render data as well as validate it.
