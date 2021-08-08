@@ -38,7 +38,7 @@ Praxis is in v0.3. It has a decent amount of tests, . I welcome other people loo
         (validate-peg it :phone-number phone-number-patt "Please enter a 10-digit phone number")))
 
 (def alice-id (db/tx "contacts.db"
-    (db/insert Contact (new-conact {
+    (db/insert Contact (new-contact {
         :name "Alice"
         :term-of-address "Alice"
         :phone-number "555-555-5555"
